@@ -12,46 +12,111 @@
   </head>
   <body>
     <main class="page">
-      <section class="header">
+      <section class="header" id="intro">
         <h1>Concept Network Cloud</h1>
         <p>
-          Submit linked concepts below. Each unique pair per participant counts once per session, and
-          the network updates live for everyone in the room.
+          Create a lightweight shared concept map for your classroom. Start a unique session, share
+          the link, and watch ideas connect in real time—no logins or student accounts required.
         </p>
       </section>
 
-      <section class="form-section">
-        <form id="concept-form" autocomplete="off">
-          <div class="field">
-            <label for="source">Concept A</label>
-            <input id="source" name="source" type="text" required />
+      <section class="launch">
+        <div class="launch-card">
+          <div>
+            <h2>Start a session</h2>
+            <p>Create a link for your class and share the URL. Each session keeps its own concept map.</p>
           </div>
-          <div class="field">
-            <label for="target">Concept B</label>
-            <input id="target" name="target" type="text" required />
+          <form id="create-session-form" autocomplete="off">
+            <div class="field">
+              <label for="session-name">Session name <span class="optional">(optional)</span></label>
+              <input id="session-name" name="name" type="text" placeholder="e.g. Grade 11 Civics" />
+            </div>
+            <button type="submit" class="primary-button full">Start new session</button>
+          </form>
+          <p class="note">We generate a short code like <code>bright-river-123</code> you can share immediately.</p>
+        </div>
+
+        <div class="launch-card">
+          <div>
+            <h2>Join a session</h2>
+            <p>Enter the session code or paste the shared link from your teacher.</p>
           </div>
-          <button type="submit" class="primary-button">Submit Link</button>
-          <p class="note">Duplicate pairs from the same browser session are ignored automatically.</p>
-          <p id="feedback" class="feedback" role="status"></p>
-        </form>
+          <form id="join-session-form" autocomplete="off">
+            <div class="field">
+              <label for="join-code">Session code</label>
+              <input
+                id="join-code"
+                name="code"
+                type="text"
+                placeholder="bright-river-123"
+                required
+              />
+            </div>
+            <button type="submit" class="primary-button full">Join session</button>
+            <p id="join-feedback" class="feedback" role="status"></p>
+          </form>
+          <button type="button" id="show-example" class="ghost-button full">Preview example network</button>
+          <p class="note">Examples are for demos only—real sessions start with a blank canvas.</p>
+        </div>
       </section>
 
-      <section class="graph-section">
-        <div class="graph-header">
-          <div>
-            <h2>Live Concept Network</h2>
-            <p>The thickness of each connection shows how often that link has been made.</p>
+      <section id="example-banner" class="example-banner hidden">
+        <span class="pill pill-example">Example view</span>
+        <p>You’re viewing the sample network. Start or join a live session to add your own concepts.</p>
+      </section>
+
+      <section id="session-shell" class="hidden">
+        <header class="session-header">
+          <div class="session-info">
+            <span class="pill" id="session-pill">Session ready</span>
+            <h2 id="session-title">Untitled session</h2>
+            <p id="session-subtitle">Share the link below with your students.</p>
           </div>
-          <div class="graph-controls" role="toolbar" aria-label="Layout mode">
-            <span class="controls-label">View</span>
-            <div class="view-toggle">
-              <button type="button" data-view-mode="focused" class="active">Focused</button>
-              <button type="button" data-view-mode="free">Free</button>
-              <button type="button" data-view-mode="hierarchy">Hierarchy</button>
+          <div class="session-share">
+            <label for="share-link">Share link</label>
+            <div class="share-input">
+              <input id="share-link" type="text" readonly />
+              <button type="button" id="copy-share-link" class="ghost-button">Copy</button>
             </div>
           </div>
-        </div>
-        <div id="graph"></div>
+          <button type="button" id="close-session" class="ghost-button danger">Back to home</button>
+        </header>
+
+        <section class="session-layout">
+          <section class="form-section">
+            <form id="concept-form" autocomplete="off">
+              <div class="field">
+                <label for="source">Concept A</label>
+                <input id="source" name="source" type="text" required />
+              </div>
+              <div class="field">
+                <label for="target">Concept B</label>
+                <input id="target" name="target" type="text" required />
+              </div>
+              <button type="submit" class="primary-button">Submit link</button>
+              <p class="note">Duplicate pairs from the same browser session are ignored automatically.</p>
+              <p id="feedback" class="feedback" role="status"></p>
+            </form>
+          </section>
+
+          <section class="graph-section">
+            <div class="graph-header">
+              <div>
+                <h2>Live Concept Network</h2>
+                <p>The thickness of each connection shows how often that link has been made.</p>
+              </div>
+              <div class="graph-controls" role="toolbar" aria-label="Layout mode">
+                <span class="controls-label">View</span>
+                <div class="view-toggle">
+                  <button type="button" data-view-mode="free" class="active">Free</button>
+                  <button type="button" data-view-mode="focused">Focused</button>
+                  <button type="button" data-view-mode="hierarchy">Hierarchy</button>
+                </div>
+              </div>
+            </div>
+            <div id="graph"></div>
+          </section>
+        </section>
       </section>
     </main>
 

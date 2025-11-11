@@ -2,10 +2,26 @@ const form = document.getElementById('concept-form');
 const feedback = document.getElementById('feedback');
 const graphContainer = document.getElementById('graph');
 const viewToggle = document.querySelector('.view-toggle');
+const createSessionForm = document.getElementById('create-session-form');
+const joinSessionForm = document.getElementById('join-session-form');
+const joinFeedback = document.getElementById('join-feedback');
+const showExampleBtn = document.getElementById('show-example');
+const sessionShell = document.getElementById('session-shell');
+const exampleBanner = document.getElementById('example-banner');
+const introSection = document.getElementById('intro');
+const launchSection = document.querySelector('.launch');
+const sessionTitle = document.getElementById('session-title');
+const sessionSubtitle = document.getElementById('session-subtitle');
+const sessionPill = document.getElementById('session-pill');
+const shareLinkInput = document.getElementById('share-link');
+const copyShareLinkBtn = document.getElementById('copy-share-link');
+const closeSessionBtn = document.getElementById('close-session');
+const shareContainer = document.querySelector('.session-share');
 
 const socket = io();
 
 const palette = ['#3f8cff', '#22c55e', '#f97316', '#8b5cf6', '#ef4444', '#14b8a6'];
+const DEMO_SESSION = 'demo-room';
 
 const baseOptions = {
   autoResize: true,
@@ -42,7 +58,7 @@ const baseOptions = {
   edges: {
     smooth: {
       type: 'continuous',
-      roundness: 0.28
+      roundness: 0.25
     },
     color: {
       color: '#cbd5e1',
@@ -59,19 +75,29 @@ const baseOptions = {
     dragNodes: false,
     zoomView: true
   },
-  physics: false
+  physics: {
+    enabled: true,
+    solver: 'forceAtlas2Based',
+    springConstant: 0.025,
+    springLength: 150,
+    damping: 0.36,
+    stabilization: {
+      enabled: true,
+      iterations: 240
+    }
+  }
 };
 
 const freeModeOptions = {
   physics: {
     enabled: true,
     solver: 'forceAtlas2Based',
-    springConstant: 0.02,
-    springLength: 140,
-    damping: 0.38,
+    springConstant: 0.025,
+    springLength: 150,
+    damping: 0.36,
     stabilization: {
       enabled: true,
-      iterations: 220
+      iterations: 240
     }
   },
   interaction: {
@@ -100,24 +126,51 @@ const state = {
     adjacency: new Map(),
     hubId: null,
     distances: new Map()
-  }
+  },
+  session: null,
+  isExample: false
 };
 
-let activeView = 'focused';
+let activeView = 'free';
+let activeSessionCode = null;
 
 const setFeedback = (message, type = '') => {
   feedback.textContent = message;
   feedback.className = `feedback ${type}`.trim();
 };
 
+const setJoinFeedback = (message, type = '') => {
+  joinFeedback.textContent = message;
+  joinFeedback.className = `feedback ${type}`.trim();
+};
+
 const formatConcept = (text) =>
   text.replace(/\b\w/g, (char) => char.toUpperCase());
 
-const scaleWidth = (weight) => {
-  const minWidth = 1;
-  const maxWidth = 12;
-  const maxWeight = 10;
-  return minWidth + ((Math.min(weight, maxWeight) - 1) / (maxWeight - 1)) * (maxWidth - minWidth);
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+const scaleEdgeWidth = (weight, maxWeight) => {
+  if (maxWeight <= 1) return 2;
+  const minWidth = 1.4;
+  const maxWidth = 16;
+  const normalized = weight / maxWeight;
+  return minWidth + Math.pow(normalized, 0.65) * (maxWidth - minWidth);
+};
+
+const scaleEdgeFont = (weight, maxWeight) => {
+  if (maxWeight <= 1) return 12;
+  const minSize = 12;
+  const maxSize = 22;
+  const normalized = weight / maxWeight;
+  return minSize + Math.pow(normalized, 0.75) * (maxSize - minSize);
+};
+
+const scaleNodeSize = (degree, maxDegree) => {
+  const minSize = 18;
+  const maxSize = 42;
+  if (maxDegree <= 1) return minSize + degree * 4;
+  const normalized = degree / maxDegree;
+  return minSize + Math.pow(normalized, 0.7) * (maxSize - minSize);
 };
 
 const buildMetrics = (graph) => {
@@ -177,35 +230,29 @@ const computeFocusedLayout = (nodes, metrics) => {
   const { hubId, distances } = metrics;
   const width = graphContainer.clientWidth || 640;
   const height = graphContainer.clientHeight || 480;
-  const baseRadius = Math.min(width, height) * 0.22;
-  const radiusStep = Math.min(width, height) * 0.18;
+  const baseRadius = Math.min(width, height) * 0.24;
+  const radiusStep = Math.min(width, height) * 0.2;
 
-  const levelMap = new Map();
-
+  const levels = new Map();
   nodes.forEach((node) => {
     const level = distances.has(node.id) ? distances.get(node.id) : Number.MAX_SAFE_INTEGER;
-    if (!levelMap.has(level)) levelMap.set(level, []);
-    levelMap.get(level).push(node.id);
+    if (!levels.has(level)) levels.set(level, []);
+    levels.get(level).push(node.id);
   });
 
-  const sortedLevels = [...levelMap.entries()].sort((a, b) => a[0] - b[0]);
+  const sortedLevels = [...levels.entries()].sort((a, b) => a[0] - b[0]);
 
   sortedLevels.forEach(([level, ids]) => {
-    if (level === 0 || level === Number.MAX_SAFE_INTEGER) {
-      ids.forEach((id, index) => {
-        const offset = index * 40;
-        positions.set(id, { x: offset, y: offset });
-      });
-      return;
-    }
-
-    const radius = baseRadius + radiusStep * (level - 1);
-    const angleStep = (2 * Math.PI) / ids.length;
+    const ringIndex = level === Number.MAX_SAFE_INTEGER ? sortedLevels.length : level;
+    const radius = baseRadius + radiusStep * (ringIndex - 1);
+    const count = ids.length;
+    const angleStep = (2 * Math.PI) / count;
     ids.forEach((id, index) => {
       const angle = angleStep * index - Math.PI / 2;
+      const jitter = (Math.random() - 0.5) * 18;
       positions.set(id, {
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius
+        x: Math.cos(angle) * radius + jitter,
+        y: Math.sin(angle) * radius + jitter
       });
     });
   });
@@ -223,35 +270,29 @@ const computeHierarchyLayout = (nodes, metrics) => {
 
   const { hubId, distances, degrees } = metrics;
 
-  const levelAssignments = new Map();
-  let maxKnownLevel = 0;
+  const levels = new Map();
+  let maxLevel = 0;
 
   nodes.forEach((node) => {
-    if (distances.has(node.id)) {
-      const level = distances.get(node.id);
-      levelAssignments.set(node.id, level);
-      maxKnownLevel = Math.max(maxKnownLevel, level);
+    const level = distances.has(node.id) ? distances.get(node.id) : Number.MAX_SAFE_INTEGER;
+    if (level !== Number.MAX_SAFE_INTEGER) {
+      maxLevel = Math.max(maxLevel, level);
     }
+    if (!levels.has(level)) levels.set(level, []);
+    levels.get(level).push(node.id);
   });
 
-  let extraLevel = maxKnownLevel + 1;
-  nodes.forEach((node) => {
-    if (!levelAssignments.has(node.id)) {
-      levelAssignments.set(node.id, extraLevel);
-      extraLevel += 1;
-    }
+  let fallbackLevel = maxLevel + 1;
+  levels.get(Number.MAX_SAFE_INTEGER)?.forEach((id) => {
+    levels.delete(Number.MAX_SAFE_INTEGER);
+    if (!levels.has(fallbackLevel)) levels.set(fallbackLevel, []);
+    levels.get(fallbackLevel).push(id);
+    fallbackLevel += 1;
   });
 
-  const levelBuckets = new Map();
-  levelAssignments.forEach((level, id) => {
-    if (!levelBuckets.has(level)) levelBuckets.set(level, []);
-    levelBuckets.get(level).push(id);
-  });
-
-  const sortedLevels = [...levelBuckets.entries()].sort((a, b) => a[0] - b[0]);
-
-  const layerHeight = 160;
-  const nodeSpacing = 160;
+  const sortedLevels = [...levels.entries()].sort((a, b) => a[0] - b[0]);
+  const layerHeight = 180;
+  const nodeSpacing = 180;
 
   sortedLevels.forEach(([level, ids]) => {
     ids.sort((a, b) => (degrees.get(b) || 0) - (degrees.get(a) || 0));
@@ -328,7 +369,7 @@ const applyViewMode = (mode) => {
     }));
 
     networkData.nodes.update(updates);
-    network.stabilize(200);
+    network.stabilize(240);
     return;
   }
 
@@ -369,6 +410,9 @@ const renderGraph = (graph) => {
 
   const { degrees } = state.metrics;
   const maxDegree = Math.max(1, ...degrees.values(), 1);
+  const maxWeight = graph.edges.length
+    ? Math.max(...graph.edges.map((edge) => edge.weight))
+    : 1;
 
   const normalizedNodes = graph.nodes.map((node) => {
     const degree = degrees.get(node.id) || 0;
@@ -380,7 +424,12 @@ const renderGraph = (graph) => {
       title: `${cleanLabel} · ${degree} link${degree === 1 ? '' : 's'}`,
       physics: false,
       fixed: { x: true, y: true },
-      size: 18 + Math.min(12, (degree / maxDegree) * 16)
+      size: scaleNodeSize(degree, maxDegree),
+      font: {
+        size: clamp(16 + degree * 1.2, 16, 28),
+        face: 'Inter',
+        color: '#0f172a'
+      }
     };
   });
 
@@ -388,9 +437,14 @@ const renderGraph = (graph) => {
     id: `${edge.from}-${edge.to}`,
     from: edge.from,
     to: edge.to,
-    width: scaleWidth(edge.weight),
+    width: scaleEdgeWidth(edge.weight, maxWeight),
     label: edge.weight.toString(),
-    font: { size: 13, color: '#475467', vadjust: -10, strokeWidth: 0 }
+    font: {
+      size: scaleEdgeFont(edge.weight, maxWeight),
+      color: '#475467',
+      vadjust: -12,
+      strokeWidth: 0
+    }
   }));
 
   networkData.nodes.clear();
@@ -411,12 +465,211 @@ if (viewToggle) {
   viewToggle.addEventListener('click', handleViewToggle);
 }
 
+const disableSessionForm = (disabled, message = '') => {
+  const inputs = form.querySelectorAll('input, button');
+  inputs.forEach((el) => {
+    el.disabled = disabled;
+  });
+  setFeedback(message, disabled ? 'warning' : '');
+};
+
+const showExampleBanner = (visible) => {
+  exampleBanner.classList.toggle('hidden', !visible);
+};
+
+const showSessionShell = (visible) => {
+  sessionShell.classList.toggle('hidden', !visible);
+  introSection.classList.toggle('hidden', visible);
+  launchSection.classList.toggle('hidden', visible);
+};
+
+const updateShareLink = (code) => {
+  if (!shareLinkInput) return;
+  if (!code) {
+    shareContainer.classList.add('hidden');
+    shareLinkInput.value = '';
+    return;
+  }
+  const url = `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(code)}`;
+  shareLinkInput.value = url;
+  shareContainer.classList.remove('hidden');
+};
+
+const updateSessionUI = () => {
+  if (!state.session) return;
+  const { session, isExample } = state;
+  const title = session.name || (isExample ? 'Example session' : 'Untitled session');
+  sessionTitle.textContent = title;
+
+  if (isExample) {
+    sessionPill.textContent = 'Example view';
+    sessionPill.classList.add('pill-example');
+    sessionSubtitle.textContent = 'Use this preview to show students what the network looks like.';
+    updateShareLink(null);
+    disableSessionForm(true, 'This is a read-only example. Start or join a session to contribute.');
+  } else {
+    sessionPill.textContent = `Session: ${session.code}`;
+    sessionPill.classList.remove('pill-example');
+    sessionSubtitle.textContent = 'Share the link below with your class. Every submission updates the network live.';
+    updateShareLink(session.code);
+    disableSessionForm(false);
+  }
+};
+
+const leaveActiveSession = () => {
+  if (activeSessionCode) {
+    socket.emit('session:leave', activeSessionCode);
+  }
+  activeSessionCode = null;
+};
+
+const joinSocketSession = (code) => {
+  if (!code) return;
+  leaveActiveSession();
+  activeSessionCode = code;
+  socket.emit('session:join', code);
+};
+
+const applyGraphResponse = (payload, isExample = false) => {
+  if (!payload) return;
+  state.session = payload.session;
+  state.isExample = isExample;
+  updateSessionUI();
+  showExampleBanner(isExample);
+  showSessionShell(true);
+  renderGraph(payload.graph);
+};
+
+const fetchSessionGraph = async (code) => {
+  const response = await fetch(`/api/session/${encodeURIComponent(code)}/graph`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Unable to load session.');
+  }
+  return response.json();
+};
+
+const createSession = async (name) => {
+  const response = await fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Unable to create session.');
+  }
+
+  const payload = await response.json();
+  const { session } = payload;
+  const graphPayload = await fetchSessionGraph(session.code);
+  joinSocketSession(session.code);
+  applyGraphResponse(graphPayload, false);
+  const url = new URL(window.location.href);
+  url.searchParams.set('code', session.code);
+  window.history.replaceState({}, '', url.toString());
+};
+
+const joinSession = async (code) => {
+  const normalized = code.trim().toLowerCase();
+  const payload = await fetchSessionGraph(normalized);
+  joinSocketSession(normalized);
+  applyGraphResponse(payload, false);
+  setJoinFeedback('', '');
+  const url = new URL(window.location.href);
+  url.searchParams.set('code', normalized);
+  window.history.replaceState({}, '', url.toString());
+};
+
+const showExample = async () => {
+  const payload = await fetchSessionGraph(DEMO_SESSION);
+  leaveActiveSession();
+  applyGraphResponse(payload, true);
+  setJoinFeedback('', '');
+  const url = new URL(window.location.href);
+  url.searchParams.delete('code');
+  window.history.replaceState({}, '', url.toString());
+};
+
+const resetToLanding = () => {
+  leaveActiveSession();
+  state.session = null;
+  state.isExample = false;
+  networkData.nodes.clear();
+  networkData.edges.clear();
+  showSessionShell(false);
+  showExampleBanner(false);
+  setFeedback('', '');
+  setJoinFeedback('', '');
+  updateShareLink(null);
+  const url = new URL(window.location.href);
+  url.searchParams.delete('code');
+  window.history.replaceState({}, '', url.toString());
+};
+
+createSessionForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const formData = new FormData(createSessionForm);
+  const name = formData.get('name')?.toString().trim() || undefined;
+  try {
+    await createSession(name);
+  } catch (error) {
+    setJoinFeedback(error.message, 'warning');
+  }
+});
+
+joinSessionForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const formData = new FormData(joinSessionForm);
+  const code = formData.get('code')?.toString();
+  if (!code) {
+    setJoinFeedback('Enter a session code to join.', 'warning');
+    return;
+  }
+  try {
+    await joinSession(code);
+  } catch (error) {
+    setJoinFeedback(error.message, 'warning');
+  }
+});
+
+showExampleBtn.addEventListener('click', () => {
+  showExample().catch((error) => {
+    setJoinFeedback(error.message, 'warning');
+  });
+});
+
+copyShareLinkBtn.addEventListener('click', async () => {
+  if (!shareLinkInput.value) return;
+  try {
+    await navigator.clipboard.writeText(shareLinkInput.value);
+    copyShareLinkBtn.textContent = 'Copied!';
+    setTimeout(() => {
+      copyShareLinkBtn.textContent = 'Copy';
+    }, 1800);
+  } catch {
+    copyShareLinkBtn.textContent = 'Press Cmd+C';
+    setTimeout(() => {
+      copyShareLinkBtn.textContent = 'Copy';
+    }, 1800);
+  }
+});
+
+closeSessionBtn.addEventListener('click', () => {
+  resetToLanding();
+});
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (!state.session || state.isExample) {
+    setFeedback('This example view is read-only. Join a live session to contribute.', 'warning');
+    return;
+  }
 
   const formData = new FormData(form);
-  const source = formData.get('source')?.trim();
-  const target = formData.get('target')?.trim();
+  const source = formData.get('source')?.toString().trim();
+  const target = formData.get('target')?.toString().trim();
 
   if (!source || !target) {
     setFeedback('Please enter a concept in both fields.', 'warning');
@@ -429,14 +682,14 @@ form.addEventListener('submit', async (event) => {
   }
 
   try {
-    const response = await fetch('/api/submit', {
+    const response = await fetch(`/api/session/${encodeURIComponent(state.session.code)}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ source, target })
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({}));
       throw new Error(error.error || 'Unable to submit concepts.');
     }
 
@@ -460,17 +713,19 @@ form.addEventListener('submit', async (event) => {
 });
 
 socket.on('graph:update', (graph) => {
+  if (!state.session || !activeSessionCode) return;
   renderGraph(graph);
 });
 
 const bootstrap = async () => {
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('code');
+  if (!code) return;
+
   try {
-    const res = await fetch('/api/graph');
-    if (!res.ok) throw new Error('Failed to load initial data');
-    const graph = await res.json();
-    renderGraph(graph);
-  } catch (err) {
-    setFeedback('Could not load initial data. Please refresh.', 'warning');
+    await joinSession(code);
+  } catch (error) {
+    setJoinFeedback(error.message, 'warning');
   }
 };
 

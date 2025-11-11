@@ -55,6 +55,45 @@ body {
   max-width: 60ch;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.launch {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.launch-card {
+  background: var(--card);
+  border-radius: 1rem;
+  padding: 1.8rem;
+  box-shadow: 0 20px 45px -24px rgba(15, 23, 42, 0.35);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 1.4rem;
+}
+
+.launch-card h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.launch-card form {
+  display: grid;
+  gap: 1rem;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.full {
+  width: 100%;
+}
+
 .form-section,
 .graph-section {
   background: var(--card);
@@ -93,6 +132,19 @@ input:focus {
   outline-offset: 2px;
 }
 
+input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.primary-button:disabled,
+.ghost-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .primary-button {
   align-self: start;
   padding: 0.8rem 1.6rem;
@@ -109,6 +161,35 @@ input:focus {
 .primary-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 30px -14px rgba(63, 140, 255, 0.8);
+}
+
+.primary-button.full {
+  justify-self: stretch;
+}
+
+.ghost-button {
+  border-radius: 0.8rem;
+  border: 1px solid rgba(63, 140, 255, 0.28);
+  background: rgba(63, 140, 255, 0.08);
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0.75rem 1.4rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+}
+
+.ghost-button:hover {
+  background: rgba(63, 140, 255, 0.16);
+}
+
+.ghost-button.danger {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.ghost-button.danger:hover {
+  background: rgba(239, 68, 68, 0.18);
 }
 
 .note {
@@ -128,6 +209,98 @@ input:focus {
 
 .feedback.warning {
   color: var(--warning);
+}
+
+.example-banner {
+  background: rgba(63, 140, 255, 0.08);
+  border: 1px dashed rgba(63, 140, 255, 0.4);
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.example-banner p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(63, 140, 255, 0.18);
+  color: var(--accent);
+}
+
+.pill-example {
+  background: rgba(236, 72, 153, 0.18);
+  color: #ec4899;
+}
+
+.session-share.hidden {
+  display: none;
+}
+
+.session-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: flex-start;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.6rem;
+  box-shadow: 0 16px 40px -32px rgba(15, 23, 42, 0.45);
+}
+
+.session-info {
+  flex: 1;
+  min-width: 240px;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.session-info h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.session-info p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.session-share {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 240px;
+}
+
+.session-share label {
+  font-weight: 600;
+}
+
+.share-input {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.share-input input {
+  flex: 1;
+  cursor: pointer;
+}
+
+.session-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
 }
 
 .graph-section {
@@ -217,6 +390,23 @@ input:focus {
   .graph-section {
     padding: 1.4rem;
   }
+
+  .launch {
+    grid-template-columns: 1fr;
+  }
+
+  .share-input {
+    flex-direction: column;
+  }
+
+  .session-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .session-header {
+    flex-direction: column;
+  }
+
   .graph-controls {
     width: 100%;
     justify-content: space-between;
