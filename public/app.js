@@ -151,18 +151,18 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 const scaleEdgeWidth = (weight, maxWeight) => {
   if (maxWeight <= 1) return 2;
-  const minWidth = 1.4;
-  const maxWidth = 16;
-  const normalized = weight / maxWeight;
-  return minWidth + Math.pow(normalized, 0.65) * (maxWidth - minWidth);
+  const minWidth = 1.6;
+  const maxWidth = 26;
+  const normalized = Math.log(weight + 1) / Math.log(maxWeight + 1);
+  return minWidth + Math.pow(normalized, 0.9) * (maxWidth - minWidth);
 };
 
 const scaleEdgeFont = (weight, maxWeight) => {
-  if (maxWeight <= 1) return 12;
-  const minSize = 12;
-  const maxSize = 22;
-  const normalized = weight / maxWeight;
-  return minSize + Math.pow(normalized, 0.75) * (maxSize - minSize);
+  if (maxWeight <= 1) return 13;
+  const minSize = 13;
+  const maxSize = 26;
+  const normalized = Math.log(weight + 1) / Math.log(maxWeight + 1);
+  return minSize + Math.pow(normalized, 0.85) * (maxSize - minSize);
 };
 
 const scaleNodeSize = (degree, maxDegree) => {
