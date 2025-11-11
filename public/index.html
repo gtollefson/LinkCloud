@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Concept Network Cloud</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    />
+  </head>
+  <body>
+    <main class="page">
+      <section class="header">
+        <h1>Concept Network Cloud</h1>
+        <p>
+          Submit linked concepts below. Each unique pair per participant counts once per session, and
+          the network updates live for everyone in the room.
+        </p>
+      </section>
+
+      <section class="form-section">
+        <form id="concept-form" autocomplete="off">
+          <div class="field">
+            <label for="source">Concept A</label>
+            <input id="source" name="source" type="text" required />
+          </div>
+          <div class="field">
+            <label for="target">Concept B</label>
+            <input id="target" name="target" type="text" required />
+          </div>
+          <button type="submit" class="primary-button">Submit Link</button>
+          <p class="note">Duplicate pairs from the same browser session are ignored automatically.</p>
+          <p id="feedback" class="feedback" role="status"></p>
+        </form>
+      </section>
+
+      <section class="graph-section">
+        <div class="graph-header">
+          <div>
+            <h2>Live Concept Network</h2>
+            <p>The thickness of each connection shows how often that link has been made.</p>
+          </div>
+          <div class="graph-controls" role="toolbar" aria-label="Layout mode">
+            <span class="controls-label">View</span>
+            <div class="view-toggle">
+              <button type="button" data-view-mode="focused" class="active">Focused</button>
+              <button type="button" data-view-mode="free">Free</button>
+              <button type="button" data-view-mode="hierarchy">Hierarchy</button>
+            </div>
+          </div>
+        </div>
+        <div id="graph"></div>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
+
+

@@ -1,0 +1,226 @@
+:root {
+  color-scheme: light dark;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bg: #f4f6fb;
+  --fg: #101828;
+  --card: #ffffff;
+  --accent: #3f8cff;
+  --muted: #475467;
+  --border: #d0d5dd;
+  --success: #12b76a;
+  --warning: #f79009;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1120;
+    --fg: #f2f4f7;
+    --card: #111c2d;
+    --accent: #8b9dfc;
+    --muted: #98a2b3;
+    --border: #1e293b;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 600;
+}
+
+.header p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.form-section,
+.graph-section {
+  background: var(--card);
+  border-radius: 1rem;
+  padding: 1.75rem;
+  box-shadow: 0 20px 45px -24px rgba(15, 23, 42, 0.35);
+  border: 1px solid var(--border);
+}
+
+form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+input {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.primary-button {
+  align-self: start;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.8rem;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px -14px rgba(63, 140, 255, 0.8);
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.feedback {
+  margin: 0;
+  font-weight: 600;
+}
+
+.feedback.success {
+  color: var(--success);
+}
+
+.feedback.warning {
+  color: var(--warning);
+}
+
+.graph-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.graph-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.graph-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(63, 140, 255, 0.08);
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(63, 140, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.controls-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.view-toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  border: 1px solid rgba(63, 140, 255, 0.16);
+}
+
+.view-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.45rem 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.view-toggle button:hover {
+  background: rgba(63, 140, 255, 0.12);
+  color: var(--fg);
+}
+
+.view-toggle button.active {
+  background: rgba(63, 140, 255, 0.92);
+  color: #fff;
+}
+
+
+.graph-header p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+#graph {
+  width: 100%;
+  height: clamp(380px, 55vh, 540px);
+  background: transparent;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--border);
+}
+
+@media (max-width: 720px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .form-section,
+  .graph-section {
+    padding: 1.4rem;
+  }
+  .graph-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+
