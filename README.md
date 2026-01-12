@@ -2,6 +2,8 @@
 
 A lightweight, open-source classroom tool where students submit linked concepts and see a shared concept network update live. No accounts or logins required—each browser session counts a unique concept pair at most once.
 
+Check it out on Render: https://linkcloud-dij3.onrender.com/
+
 ## Why this stack?
 - **Language & runtime:** Node.js + Express keeps the backend tiny, easy to reason about, and deployable on any free-tier Node host (Render, Railway, Fly.io, etc.).
 - **Persistence:** `better-sqlite3` stores data in a single on-disk SQLite database—perfect for low-cost hosting without external services.
